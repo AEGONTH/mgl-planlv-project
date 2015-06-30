@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileFormat fileName="" fileType="xlsx" locale="US">
+	<DataSet description="sampleData">
+		<DataSheet sheetName="Sheet1" sheetIndex="0"> <!-- index start with 0, 1, 2,...  -->
+			<!-- <DataCell row="1" column="A" dataType="TEXT|NUMBER|DATE|BOOLEAN|BLANK|FORMULA|ERROR" dataFormat="" fieldName="fieldAaa" defaultValue="" /> -->
+			<DataRecord listSourceName="dataList" beginRow="2" endRow="99">
+				
+				<DataCell row="1" column="B" dataType="TEXT" fieldName="campaignCode" autoTrim="TRUE"/>
+				<DataCell row="1" column="C" dataType="NUMBER" dataFormat="#0.000000" fieldName="issuedRate" />
+				<DataCell row="1" column="D" dataType="NUMBER" dataFormat="#0.000000" fieldName="paidRate" />
+				<DataCell row="1" column="E" dataType="TEXT" fieldName="targetYear" autoTrim="TRUE"/>
+				
+				<EndRecordCondition column="B" comparator="BLANK" checkValue="" />
+			</DataRecord>
+		</DataSheet>
+
+	</DataSet>
+</FileFormat>

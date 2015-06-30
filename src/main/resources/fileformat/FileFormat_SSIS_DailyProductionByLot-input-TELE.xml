@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileFormat fileName="Daily_Performance_Tracking_ByLot.xls" fileType="EXCEL" locale="en-US">
+	<DataSet description="Daily Performance Tracking">
+
+		<DataSheet sheetIndex="0">
+
+			<DataRecord listSourceName="listLotList" beginRow="1" endRow="9">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Solicitation Code  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="TEXT" fieldName="listLotCode" autoTrim="TRUE" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Solicitation Code  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="totalLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Total Inventory  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="totalLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Total Inventory  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="remainingLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Remaining Inventory :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="remainingLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Remaining Inventory :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="dataRecords" beginRow="1" endRow="99999">
+				<BeginRecordCondition column="B" comparator="EQ" checkValue="Date" />
+				<DataCell row="1" column="B" dataType="DATE"   fieldName="productionDate" dataFormat="yyyy-MM-dd" />
+				<DataCell row="1" column="D" dataType="NUMBER" fieldName="minutes"        dataFormat="0.000000000000000" />
+				<DataCell row="1" column="G" dataType="NUMBER" fieldName="dialing"        dataFormat="0" />
+				<DataCell row="1" column="H" dataType="NUMBER" fieldName="completed"      dataFormat="0" />
+				<DataCell row="1" column="K" dataType="NUMBER" fieldName="contact"        dataFormat="0" />
+				<DataCell row="1" column="N" dataType="NUMBER" fieldName="sales"          dataFormat="0" />
+				<DataCell row="1" column="R" dataType="NUMBER" fieldName="abandons"       dataFormat="0" />
+				<DataCell row="1" column="S" dataType="NUMBER" fieldName="uwReleaseSales" dataFormat="0" />
+				<DataCell row="1" column="T" dataType="NUMBER" fieldName="typ"            dataFormat="0.00" />
+				<DataCell row="1" column="X" dataType="NUMBER" fieldName="totalCost"      dataFormat="0.00" />
+				<DataCell row="1" column="Z" dataType="NUMBER" fieldName="releaseSales"   dataFormat="0" />
+				<DataCell row="1" column="AC" dataType="NUMBER" fieldName="ampPostUw"     dataFormat="0.00" />
+				<DataCell row="1" column="AD" dataType="NUMBER" fieldName="declines"      dataFormat="0" />
+				<EndRecordCondition column="A" comparator="EQ" checkValue="Month To Date"/>
+			</DataRecord>
+
+		</DataSheet>
+
+
+		<DataSheet sheetIndex="1" skipWhenNull="TRUE">
+
+			<DataRecord listSourceName="listLotList" beginRow="1" endRow="9">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Solicitation Code  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="TEXT" fieldName="listLotCode" autoTrim="TRUE" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Solicitation Code  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="totalLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Total Inventory  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="totalLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Total Inventory  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="remainingLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Remaining Inventory :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="remainingLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Remaining Inventory :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="dataRecords" beginRow="1" endRow="99999">
+				<BeginRecordCondition column="B" comparator="EQ" checkValue="Date" />
+				<DataCell row="1" column="B" dataType="DATE"   fieldName="productionDate" dataFormat="yyyy-MM-dd" />
+				<DataCell row="1" column="D" dataType="NUMBER" fieldName="minutes"        dataFormat="0.000000000000000" />
+				<DataCell row="1" column="G" dataType="NUMBER" fieldName="dialing"        dataFormat="0" />
+				<DataCell row="1" column="H" dataType="NUMBER" fieldName="completed"      dataFormat="0" />
+				<DataCell row="1" column="K" dataType="NUMBER" fieldName="contact"        dataFormat="0" />
+				<DataCell row="1" column="N" dataType="NUMBER" fieldName="sales"          dataFormat="0" />
+				<DataCell row="1" column="R" dataType="NUMBER" fieldName="abandons"       dataFormat="0" />
+				<DataCell row="1" column="S" dataType="NUMBER" fieldName="uwReleaseSales" dataFormat="0" />
+				<DataCell row="1" column="T" dataType="NUMBER" fieldName="typ"            dataFormat="0.00" />
+				<DataCell row="1" column="X" dataType="NUMBER" fieldName="totalCost"      dataFormat="0.00" />
+				<DataCell row="1" column="Z" dataType="NUMBER" fieldName="releaseSales"   dataFormat="0" />
+				<DataCell row="1" column="AC" dataType="NUMBER" fieldName="ampPostUw"     dataFormat="0.00" />
+				<DataCell row="1" column="AD" dataType="NUMBER" fieldName="declines"      dataFormat="0" />
+				<EndRecordCondition column="A" comparator="EQ" checkValue="Month To Date"/>
+			</DataRecord>
+
+		</DataSheet>
+
+
+		<DataSheet sheetIndex="2" skipWhenNull="TRUE">
+
+			<DataRecord listSourceName="listLotList" beginRow="1" endRow="9">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Solicitation Code  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="TEXT" fieldName="listLotCode" autoTrim="TRUE" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Solicitation Code  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="totalLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Total Inventory  :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="totalLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Total Inventory  :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="remainingLeadList" beginRow="1" endRow="99">
+				<BeginRecordCondition column="A" comparator="EQ" checkValue="Remaining Inventory :" firstRowAsData="TRUE" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="remainingLead" />
+				<EndRecordCondition column="A" comparator="NE" checkValue="Remaining Inventory :" />
+			</DataRecord>
+
+			<DataRecord listSourceName="dataRecords" beginRow="1" endRow="99999">
+				<BeginRecordCondition column="B" comparator="EQ" checkValue="Date" />
+				<DataCell row="1" column="B" dataType="DATE"   fieldName="productionDate" dataFormat="yyyy-MM-dd" />
+				<DataCell row="1" column="D" dataType="NUMBER" fieldName="minutes"        dataFormat="0.000000000000000" />
+				<DataCell row="1" column="G" dataType="NUMBER" fieldName="dialing"        dataFormat="0" />
+				<DataCell row="1" column="H" dataType="NUMBER" fieldName="completed"      dataFormat="0" />
+				<DataCell row="1" column="K" dataType="NUMBER" fieldName="contact"        dataFormat="0" />
+				<DataCell row="1" column="N" dataType="NUMBER" fieldName="sales"          dataFormat="0" />
+				<DataCell row="1" column="R" dataType="NUMBER" fieldName="abandons"       dataFormat="0" />
+				<DataCell row="1" column="S" dataType="NUMBER" fieldName="uwReleaseSales" dataFormat="0" />
+				<DataCell row="1" column="T" dataType="NUMBER" fieldName="typ"            dataFormat="0.00" />
+				<DataCell row="1" column="X" dataType="NUMBER" fieldName="totalCost"      dataFormat="0.00" />
+				<DataCell row="1" column="Z" dataType="NUMBER" fieldName="releaseSales"   dataFormat="0" />
+				<DataCell row="1" column="AC" dataType="NUMBER" fieldName="ampPostUw"     dataFormat="0.00" />
+				<DataCell row="1" column="AD" dataType="NUMBER" fieldName="declines"      dataFormat="0" />
+				<EndRecordCondition column="A" comparator="EQ" checkValue="Month To Date"/>
+			</DataRecord>
+
+		</DataSheet>
+
+	</DataSet>
+</FileFormat>
