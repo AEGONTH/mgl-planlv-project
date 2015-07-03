@@ -15,9 +15,12 @@ import com.adms.mglplanreport.util.ApplicationContextUtil;
 import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.PlanLevelObj;
 import com.adms.utils.DateUtil;
+import com.adms.utils.Logger;
 
 public class MTLBrokerPlanLvGenImpl extends AbstractPlanLevelGenerator {
 
+	private Logger log = Logger.getLogger();
+	
 	@Override
 	public PlanLevelObj getMTDData(String campaignCode, Date processDate) throws Exception {
 		PlanLvValueService service = (PlanLvValueService) ApplicationContextUtil.getApplicationContext().getBean("planLvValueService");
@@ -51,13 +54,18 @@ public class MTLBrokerPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		
 		Cell cell = sheet.getRow(2).getCell(0, Row.CREATE_NULL_AS_BLANK);
 		cell.setCellValue(planLevelMtdObj.getMonthYear());
-		
+
+		String dataRange = "";
 		try {
-			setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
-			setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
+			dataRange = "MTD";
+			setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), dataRange);
+			
+			dataRange = "YTD";
+			setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), dataRange);
 			sheet.setPrintGridlines(false);
 		} catch(Exception e) {
-			e.printStackTrace();
+			log.error("ERR: error on 'sheet: " + sheet.getSheetName() + "' > " + dataRange, e);
+			
 		}
 	}
 	
@@ -70,17 +78,21 @@ public class MTLBrokerPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		int ampRowIdx = isMtd ? 5 : 9;
 		
 		for(PlanLvValue planLv : planLvList) {
-			
-			String planType = planLv.getPlanType().toUpperCase();
-			planIdx = getPlanColumnIdx(sheet, planLv.getProduct().toUpperCase(), planType);
-			
-			if(planIdx == 999) {
-				throw new Exception("Column Index not found for \"" + planLv.getProduct() + " | " + planType + "\"");
+			try {
+				String planType = planLv.getPlanType().toUpperCase();
+				planIdx = getPlanColumnIdx(sheet, planLv.getProduct().toUpperCase(), planType);
+				
+				if(planIdx == 999) {
+					throw new Exception("Column Index not found for \"" + planLv.getProduct() + " | " + planType + "\"");
+				}
+				
+				sheet.getRow(noOfFileRowIdx).getCell(planIdx).setCellValue(planLv.getNumOfFile());
+				sheet.getRow(typRowIdx).getCell(planIdx).setCellValue(planLv.getTyp());
+				sheet.getRow(ampRowIdx).getCell(planIdx).setCellValue(planLv.getAmp());
+			} catch(Exception e) {
+				log.error("ERR: " + planLv.toString(), e);
+				throw e;
 			}
-			
-			sheet.getRow(noOfFileRowIdx).getCell(planIdx).setCellValue(planLv.getNumOfFile());
-			sheet.getRow(typRowIdx).getCell(planIdx).setCellValue(planLv.getTyp());
-			sheet.getRow(ampRowIdx).getCell(planIdx).setCellValue(planLv.getAmp());
 		}
 
 		WorkbookUtil.getInstance().refreshAllFormula(sheet.getWorkbook());

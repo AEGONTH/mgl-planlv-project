@@ -514,10 +514,10 @@ public class MGLSummaryReport {
 		String yyyy = "yyyy";
 		String outName = EXPORT_FILE_NAME.replaceAll("#".concat(yyyy), DateUtil.convDateToString(yyyy, processDate));
 		FileUtil.getInstance().createDirectory(outPath);
-		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
+		String outDir = WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		logger.info("Writed to " + outPath + "/" + outName);
+		logger.info("Writed to " + outDir);
 	}
 
 }

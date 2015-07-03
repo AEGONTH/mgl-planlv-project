@@ -1,5 +1,6 @@
 package com.adms.mglplanreport.util;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Date;
@@ -90,14 +91,18 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 		toSheet.setColumnWidth(toColumnNum, origSheet.getColumnWidth(origColumnNum));
 	}
 	
-	public void writeOut(Workbook wb, String dir, String fileName) {
+	public String writeOut(Workbook wb, String dir, String fileName) {
 		try {
+			String outFileDir = "";
 			FileUtil.getInstance().createDirectory(dir);
-			OutputStream os = new FileOutputStream(dir + "/" + fileName);
+			outFileDir = dir + File.separatorChar + fileName;
+			OutputStream os = new FileOutputStream(outFileDir);
 			wb.write(os);
 			os.close();
+			return outFileDir;
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 }

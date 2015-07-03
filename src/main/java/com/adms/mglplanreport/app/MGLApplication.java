@@ -1,5 +1,6 @@
 package com.adms.mglplanreport.app;
 
+import java.io.File;
 import java.util.Date;
 
 import com.adms.mglplanreport.service.MGLByCampaignMonthlyReport;
@@ -15,17 +16,20 @@ public class MGLApplication {
 	public static void main(String[] args) {
 		try {
 			logger.setLogFileName(args[2]);
+//			logger.setLogFileName("d:/temp/log.log");
 			
 			String processDateStr = args[0];
-//			String dir = "D:/project/reports/MGL/out";
-			String dir = args[1];
+//			String processDateStr = "20150630";
 			Date processDate = DateUtil.convStringToDate("yyyyMMdd", processDateStr);
 			
-			new MGLSummaryReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/summary", processDate);
+//			String dir = "D:/temp/MGL/out";
+			String dir = args[1];
 			
-			new MGLByCampaignMonthlyReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/production", processDate);
+			new MGLSummaryReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "summary", processDate);
 			
-			new PlanLVReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/planlv", processDate);
+			new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "production", processDate);
+			
+			new PlanLVReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "planlv", processDate);
 			
 			logger.info("### Finish ###");
 		} catch(Exception e) {

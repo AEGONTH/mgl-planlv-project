@@ -36,7 +36,7 @@ public class PlanLVReport {
 			logger.info("## Plan Level Report ##");
 			initCampaignSheet(WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath())));
 		} catch(Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 	}
 	
@@ -51,7 +51,7 @@ public class PlanLVReport {
 			for(Campaign campaign : campaigns) {
 				
 //				<!-- Skip -->
-				if(campaign.getCampaignCode().equals("021PA1715M04")) continue;
+//				if(campaign.getCampaignCode().equals("021PA1715M04")) continue;
 				
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
@@ -75,19 +75,20 @@ public class PlanLVReport {
 					planLv.generateDataSheet(wb.getSheetAt(sheetIdx), mtdData, ytdData);
 					planLv = null;
 				} catch(Exception e) {
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 			}
 			
 			writeOut(wb, processDate, outPath);
 			
 		} catch(Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 	}
 	
 	private void initCampaignSheet(Workbook wb) throws IOException {
 		_campaignSheetIdxMap = new HashMap<>();
+		System.out.println("wb.getNumberOfSheets(): " + wb.getNumberOfSheets());
 		for(int i = 0; i < wb.getNumberOfSheets(); i++) {
 			_campaignSheetIdxMap.put(wb.getSheetAt(i).getRow(0).getCell(1, Row.CREATE_NULL_AS_BLANK).getStringCellValue(), i);
 		}
@@ -116,17 +117,17 @@ public class PlanLVReport {
 		String outName = EXPORT_FILE_NAME.replaceAll("#".concat("MMM_yyyyMM"), DateUtil.convDateToString("MMM_yyyyMM", processDate));
 		
 		FileUtil.getInstance().createDirectory(outPath);
-		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
+		String outDir = WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		logger.info("Writed: " + outPath + "/" + outName);
+		logger.info("Writed: " + outDir);
 	}
 	
 	private void sortingSheets(Workbook wb) {
 //		sorting sheets
 		int len = wb.getNumberOfSheets();
 		int k;
-		
+		System.out.println("_campaignSheetIdxMap size: " + _campaignSheetIdxMap.size());
 		for(int n = len; n >= 0; n--) {
 			for(int i = 0; i < len - 1; i++) {
 				k = i + 1;
@@ -134,14 +135,25 @@ public class PlanLVReport {
 				String b = wb.getSheetAt(k).getRow(0).getCell(1).getStringCellValue();
 				
 				if(_campaignSheetIdxMap.get(a) > _campaignSheetIdxMap.get(b)) {
-					swap(wb, _campaignSheetIdxMap.get(a), _campaignSheetIdxMap.get(b));
+					try {
+						swap(wb, _campaignSheetIdxMap.get(a), _campaignSheetIdxMap.get(b));
+					} catch(Exception e) {
+						System.err.println("err: " + a + " cannot swap with " + b);
+						logger.error(e.getMessage(), e);
+					}
 				}
 			}
 		}
 		
 	}
 	
-	private void swap(Workbook wb, int idxA, int idxB) {
-		wb.setSheetOrder(wb.getSheetAt(idxA).getSheetName(), idxB);
+	private void swap(Workbook wb, int idxA, int idxB) throws Exception {
+		try {
+//			System.out.println("swap sheet length: " + wb.getNumberOfSheets());
+			wb.setSheetOrder(wb.getSheetAt(idxA).getSheetName(), idxB);
+		} catch(Exception e) {
+			logger.error("Workbook sheet quantity: " + wb.getNumberOfSheets() + ", Cannot swap A: " + idxA + " and B: " + idxB);
+			throw e;
+		}
 	}
 }

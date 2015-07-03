@@ -446,10 +446,10 @@ public class MGLByCampaignMonthlyReport {
 				.replaceAll("#".concat(dateFormat), DateUtil.convDateToString(dateFormat, processDate));
 		
 		FileUtil.getInstance().createDirectory(outPath);
-		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
+		String outDir = WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		logger.info("Writed: " + campaignName);
+		logger.info("Writed: " + campaignName + " | to: " + outDir);
 	}
 	
 	private void setDataValue(Row tempRow, Row toRow, ProductionByLot product, boolean isSumListLot, boolean isSumMonth, boolean isSumSheet) throws Exception {
