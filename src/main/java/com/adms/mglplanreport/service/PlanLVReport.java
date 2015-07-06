@@ -50,8 +50,9 @@ public class PlanLVReport {
 			
 			for(Campaign campaign : campaigns) {
 				
-//				<!-- Skip -->
-//				if(campaign.getCampaignCode().equals("021PA1715M04")) continue;
+//				<!-- for Debug -->
+//				if(campaign.getCampaignCode().equals("141BK1715L04")) 
+//					System.out.println("MTL Broker HIP");
 				
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
@@ -88,7 +89,6 @@ public class PlanLVReport {
 	
 	private void initCampaignSheet(Workbook wb) throws IOException {
 		_campaignSheetIdxMap = new HashMap<>();
-		System.out.println("wb.getNumberOfSheets(): " + wb.getNumberOfSheets());
 		for(int i = 0; i < wb.getNumberOfSheets(); i++) {
 			_campaignSheetIdxMap.put(wb.getSheetAt(i).getRow(0).getCell(1, Row.CREATE_NULL_AS_BLANK).getStringCellValue(), i);
 		}
