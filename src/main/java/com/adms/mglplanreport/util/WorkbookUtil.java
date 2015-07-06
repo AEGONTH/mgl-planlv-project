@@ -29,10 +29,11 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 	}
 	
 	public void addPicture(Sheet sheet, byte[] bytes, int rowIdx, int colIdx, int pictureType) {
-		addPicture(sheet, bytes, rowIdx, colIdx, 1, pictureType);
+		addPicture(sheet, bytes, rowIdx, colIdx, 1.0d, pictureType);
 	}
 	
-	public void addPicture(Sheet sheet, byte[] bytes, int rowIdx, int colIdx, int resizePercent, int pictureType) {
+	public void addPicture(Sheet sheet, byte[] bytes, int rowIdx, int colIdx, double resizePercent, int pictureType) {
+//		Add picture
 		int pictureIdx = sheet.getWorkbook().addPicture(bytes, pictureType);
 		
 		CreationHelper helper = sheet.getWorkbook().getCreationHelper();
@@ -43,7 +44,11 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 		anchor.setCol1(colIdx);
 		
 		Picture picture = drawing.createPicture(anchor, pictureIdx);
-		picture.resize(resizePercent);
+		if(resizePercent < 1.0d) {
+			picture.resize(resizePercent);
+		} else {
+			picture.resize();
+		}
 	}
 	
 	public void refreshAllFormula(Workbook wb) {

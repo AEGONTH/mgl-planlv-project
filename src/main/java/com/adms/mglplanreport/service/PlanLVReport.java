@@ -61,6 +61,12 @@ public class PlanLVReport {
 				
 				try {
 					PlanLevelGenerator planLv = PlanLevelGeneratorFactory.getGenerator(campaign.getCampaignNameMgl());
+					
+					if(planLv == null) {
+						logger.warn("Plan Level Generator for '" + campaign.getCampaignNameMgl() + "' not found.");
+						continue;
+					}
+					
 					logger.info("Getting MTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
 					PlanLevelObj mtdData = planLv.getMTDData(campaign.getCampaignCode(), processDate);
 					
@@ -127,7 +133,7 @@ public class PlanLVReport {
 //		sorting sheets
 		int len = wb.getNumberOfSheets();
 		int k;
-		System.out.println("_campaignSheetIdxMap size: " + _campaignSheetIdxMap.size());
+		
 		for(int n = len; n >= 0; n--) {
 			for(int i = 0; i < len - 1; i++) {
 				k = i + 1;

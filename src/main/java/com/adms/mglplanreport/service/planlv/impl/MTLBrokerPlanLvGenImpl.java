@@ -65,7 +65,6 @@ public class MTLBrokerPlanLvGenImpl extends AbstractPlanLevelGenerator {
 			sheet.setPrintGridlines(false);
 		} catch(Exception e) {
 			log.error("ERR: error on 'sheet: " + sheet.getSheetName() + "' > " + dataRange, e);
-			
 		}
 	}
 	

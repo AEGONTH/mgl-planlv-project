@@ -134,7 +134,7 @@ public class MGLSummaryReport {
 				+ " where 1 = 1 "
 				+ " and CONVERT(nvarchar(6), d.productionDate, 112) <= ? "
 				+ " and CONVERT(nvarchar(4), d.productionDate, 112) = ? "
-				+ " order by d.listLot.campaign.campaignCode, d.listLot.listLotCode, d.productionDate ";
+				+ " order by d.listLot.campaign.campaignNameMgl, d.listLot.listLotCode, d.productionDate ";
 		List<ProductionByLot> productions = productionService.findByHql(hql, DateUtil.convDateToString("yyyyMM", dataDate), DateUtil.convDateToString("yyyy", dataDate));
 		
 		logger.info("productions size: " + productions.size());
