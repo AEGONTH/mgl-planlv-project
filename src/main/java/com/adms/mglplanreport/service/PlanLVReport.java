@@ -79,6 +79,11 @@ public class PlanLVReport {
 						throw new Exception("Cannot find template sheet index: " + campaign.getCampaignCode());
 					}
 					
+					if(wb.getSheetAt(sheetIdx) == null) {
+						logger.warn("Template for '" + campaign.getCampaignNameMgl() + "' not found.");
+						continue;
+					}
+					
 					planLv.generateDataSheet(wb.getSheetAt(sheetIdx), mtdData, ytdData);
 					planLv = null;
 				} catch(Exception e) {
