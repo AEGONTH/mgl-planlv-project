@@ -4,11 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URLClassLoader;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellReference;
 
 import com.adms.imex.excelformat.DataHolder;
 import com.adms.imex.excelformat.ExcelFormat;
@@ -31,7 +39,7 @@ public class ImportProduction {
 	public static final String PRODUCTION_BY_LOT_SERVICE_BEAN = "productionByLotService";
 	public static final String LIST_LOT_SERVICE_BEAN = "listLotService";
 	
-	public static String NEW_HH_MM_CAMPAIGN = "";
+//	public static String NEW_HH_MM_CAMPAIGN = "";
 
 //	private ApplicationContext applicationContext;
 	protected Logger log = Logger.getLogger(Logger.DEBUG);
@@ -91,13 +99,12 @@ public class ImportProduction {
 		String minutesTxt = minutes.toString();
 		
 		productionByLot.setHour(Long.valueOf(minutesTxt.split("\\.")[0]) / 60);
+		productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]) % 60);
 		
 //		<!-- New HH.MM -->
 		if(isNewHHmm) {
-			productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]));
 			productionByLot.setSecond(Long.valueOf(minutesTxt.split("\\.")[1]));
 		} else {
-			productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]) % 60);
 			productionByLot.setSecond(Long.valueOf(Math.round(Float.valueOf("0." + minutesTxt.split("\\.")[1]) * 60)));
 		}
 		
@@ -116,12 +123,7 @@ public class ImportProduction {
 		return productionByLot;
 	}
 	
-	private ProductionByLot extractRecord(DataHolder dataHolder, ProductionByLot productionByLot) throws Exception
-	{
-		return extractRecord(dataHolder, productionByLot, false);
-	}
-
-	private void importDataHolder(ListLot listLot, Integer totalLead, Integer remainingLead, DataHolder dataHolder)
+	private void importDataHolder(ListLot listLot, Integer totalLead, Integer remainingLead, DataHolder dataHolder, boolean isNewTimeFormat)
 			throws Exception
 	{
 		Date productionDate = (Date) dataHolder.get("productionDate").getValue();
@@ -145,11 +147,7 @@ public class ImportProduction {
 
 		try
 		{
-			if(NEW_HH_MM_CAMPAIGN.contains(listLot.getCampaign().getCampaignCode())) {
-				extractRecord(dataHolder, productionByLot);
-			} else {
-				extractRecord(dataHolder, productionByLot, true);
-			}
+			extractRecord(dataHolder, productionByLot, isNewTimeFormat);
 
 			if (newProductionByLot)
 			{
@@ -166,26 +164,42 @@ public class ImportProduction {
 		}
 	}
 
-	private void importDataHolderList(ListLot listLot, Integer totalLead, Integer remainingLead, List<DataHolder> dataHolderList)
+	private void importDataHolderList(ListLot listLot, Integer totalLead, Integer remainingLead, List<DataHolder> dataHolderList, boolean isNewTimeFormat)
 			throws Exception
 	{
+		log.info("Importing... ListLot: " + listLot.getListLotCode());
 		for (DataHolder dataHolder : dataHolderList)
 		{
-			importDataHolder(listLot, totalLead, remainingLead, dataHolder);
+			importDataHolder(listLot, totalLead, remainingLead, dataHolder, isNewTimeFormat);
 		}
+	}
+	
+	private boolean isNewTimeFormat(String filePath) throws InvalidFormatException, FileNotFoundException, IOException {
+		boolean flag = false;
+		
+		Workbook wb = WorkbookFactory.create(new FileInputStream(filePath));
+		Row row = wb.getSheetAt(0).getRow(8);
+		Cell cell = row.getCell(CellReference.convertColStringToIndex("D"), Row.CREATE_NULL_AS_BLANK);
+		String val = cell.getStringCellValue();
+		
+		if(val.contains("mm.ss")) {
+			flag = true;
+		}
+		wb.close();
+		return flag;
 	}
 
 	private void importFile(String fileFormatFileName, String dataFileLocation)
-			throws Exception
 	{
 		log.info("importFile: " + dataFileLocation);
 		InputStream format = null;
 		InputStream input = null;
+		boolean isNewTimeFormat = false;
 		try
 		{
 			format = URLClassLoader.getSystemResourceAsStream(fileFormatFileName);
 			ExcelFormat excelFormat = new ExcelFormat(format);
-
+			
 			input = new FileInputStream(dataFileLocation);
 			DataHolder fileDataHolder = excelFormat.readExcel(input);
 
@@ -210,7 +224,7 @@ public class ImportProduction {
 					listLot = getListLotService().findListLotByListLotCode(listLotCode);
 					if (listLot == null)
 					{
-						log.warn("not found listLot for listLotCode: " + listLotCode);
+						log.warn("not found listLot for listLotCode: " + listLotCode + " | on sheet: " + sheetName);
 						continue;
 					}
 				}
@@ -237,13 +251,14 @@ public class ImportProduction {
 					remainingLead = remainingLeadDataHolder.get("remainingLead").getIntValue();
 				}
 
+				if(dataFileLocation.contains("TELE")) isNewTimeFormat = isNewTimeFormat(dataFileLocation);
 				List<DataHolder> dataHolderList = sheetDataHolder.getDataList("dataRecords");
-				importDataHolderList(listLot, totalLead, remainingLead, dataHolderList);
+				importDataHolderList(listLot, totalLead, remainingLead, dataHolderList, isNewTimeFormat);
 			}
 		}
 		catch (Exception e)
 		{
-			throw e;
+			log.error(e.getMessage() + ": " + e.getStackTrace());
 		}
 		finally
 		{
@@ -264,7 +279,7 @@ public class ImportProduction {
 		}
 	}
 
-	public static void main(String[] args) throws Exception
+	public static void main(String[] args)
 	{
 		String fileFormatFileName = /* args[0]; */ null;
 //		String rootPath = /* args[1]; */ "T:/Business Solution/Share/N_Mos/Daily Sales Report/201502";
@@ -272,7 +287,7 @@ public class ImportProduction {
 		String rootPath = args[0];
 		String logPath = args[1];
 //		String logPath = "D:/temp/log.log";
-		NEW_HH_MM_CAMPAIGN = args[2];
+//		NEW_HH_MM_CAMPAIGN = args[2];
 //		NEW_HH_MM_CAMPAIGN = "021DP1715M01";
 		
 		ImportProduction batch = new ImportProduction();

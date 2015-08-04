@@ -18,18 +18,17 @@ public class MGLApplication {
 			logger.setLogFileName(args[2]);
 //			logger.setLogFileName("d:/temp/log.log");
 			
-			String processDateStr = args[0];
-//			String processDateStr = "20150630";
-			Date processDate = DateUtil.convStringToDate("yyyyMMdd", processDateStr);
+			String yyyyMMarg = args[0];
+			Date processDate = DateUtil.toEndOfMonth(DateUtil.convStringToDate("yyyyMMdd", yyyyMMarg+"01"));
 			
 //			String dir = "D:/temp/MGL/out";
 			String dir = args[1];
 			
-			new MGLSummaryReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "summary", processDate);
+			new MGLSummaryReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "summary", processDate);
 			
-			new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "production", processDate);
+			new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "production", processDate);
 			
-			new PlanLVReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "planlv", processDate);
+			new PlanLVReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "planlv", processDate);
 			
 			logger.info("### Finish ###");
 		} catch(Exception e) {
