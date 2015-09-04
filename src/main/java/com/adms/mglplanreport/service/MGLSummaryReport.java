@@ -70,9 +70,11 @@ public class MGLSummaryReport {
 			String captionDateFormat = "MMM yyyy";
 			captionCell.setCellValue(caption.replace(captionDateFormat, DateUtil.convDateToString(captionDateFormat, processDate)));
 			
-//			set table column header
+//			retrieving data
 			List<MGLSummaryObj> mglSumList = getMGLSummary(processDate);
 			int maxMonth = getMaxMonthInYear(mglSumList);
+			
+//			set table column header
 			doTableHeader(tempSheet, toSheet, maxMonth);
 			
 //			set table data
@@ -117,16 +119,6 @@ public class MGLSummaryReport {
 		
 		Map<String, Double[]> mtdMap = null;
 		MGLSummaryObj obj = null;
-		
-//		TempKeyCodeInPastService mglTargetService = (TempKeyCodeInPastService) ApplicationContextUtil.getApplicationContext().getBean("tempKeyCodeInPastService");
-//		List<TempKeyCodeInPast> mglTargets = mglTargetService.find(new TempKeyCodeInPast(DateUtil.convDateToString("yyyy", dataDate)));
-//		
-//		if(mglTargets == null || mglTargets.isEmpty()) throw new Exception("MGL Targets null");
-		
-//		Map<String, MglTarget> mglTargetByCampaign = new HashMap<>();
-//		for(MglTarget mgl : mglTargets) {
-//			mglTargetByCampaign.put(mgl.getCampaign().getCampaignCode(), mgl);
-//		}
 		
 		ProductionByLotService productionService = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
 		

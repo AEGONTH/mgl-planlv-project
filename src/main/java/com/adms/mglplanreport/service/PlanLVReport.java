@@ -50,10 +50,6 @@ public class PlanLVReport {
 			
 			for(Campaign campaign : campaigns) {
 				
-//				<!-- for Debug -->
-//				if(campaign.getCampaignCode().equals("141BK1715L04")) 
-//					System.out.println("MTL Broker HIP");
-				
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
 					_all_template_num = wb.getNumberOfSheets();
@@ -135,7 +131,6 @@ public class PlanLVReport {
 	}
 	
 	private void sortingSheets(Workbook wb) {
-//		sorting sheets
 		int len = wb.getNumberOfSheets();
 		int k;
 		
@@ -160,7 +155,6 @@ public class PlanLVReport {
 	
 	private void swap(Workbook wb, int idxA, int idxB) throws Exception {
 		try {
-//			System.out.println("swap sheet length: " + wb.getNumberOfSheets());
 			wb.setSheetOrder(wb.getSheetAt(idxA).getSheetName(), idxB);
 		} catch(Exception e) {
 			logger.error("Workbook sheet quantity: " + wb.getNumberOfSheets() + ", Cannot swap A: " + idxA + " and B: " + idxB);

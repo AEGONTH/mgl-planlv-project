@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 
 import com.adms.mglplanlv.entity.ProductionByLot;
 import com.adms.mglplanlv.service.productionbylot.ProductionByLotService;
@@ -132,7 +133,6 @@ public class MGLByCampaignMonthlyReport {
 		if(isSumSheet) {
 			doDataTableSumSheet(tempSheet, toSheet, mglMonthlyObj.getProductionByLots());
 			doSumTableSumSheet(tempSheet, toSheet, mglMonthlyObj);
-			
 		} else {
 			doDataTable(tempSheet, toSheet, mglMonthlyObj.getProductionByLots());
 //			set sum table
@@ -516,7 +516,14 @@ public class MGLByCampaignMonthlyReport {
 				break;
 			case 12 : 
 				/* Sales */
-				toCell.setCellValue(product.getSales());
+				if(isSumMonth && isSumSheet) {
+					toCell.setCellFormula("SUM(" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1) 
+							+ ":" 
+							+ CellReference.convertNumToColString(toCell.getColumnIndex()) + (toCell.getRowIndex())
+							+ ")");
+				} else {
+					toCell.setCellValue(product.getSales());
+				}
 				break;
 			case 13 : 
 				/* SPH */
@@ -540,7 +547,14 @@ public class MGLByCampaignMonthlyReport {
 				break;
 			case 18 : 
 				/* TYP */
-				toCell.setCellValue(product.getTyp().doubleValue());
+				if(isSumMonth && isSumSheet) {
+					toCell.setCellFormula("SUM(" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1) 
+							+ ":" 
+							+ CellReference.convertNumToColString(toCell.getColumnIndex()) + (toCell.getRowIndex())
+							+ ")");
+				} else {
+					toCell.setCellValue(product.getTyp().doubleValue());
+				}
 				break;
 			case 19 : 
 				/* TMP = TYP / 12 */ 
