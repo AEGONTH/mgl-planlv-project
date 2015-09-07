@@ -64,7 +64,7 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		
 		int noOfFileRowIdx = isMtd ? 3 : 7;
 		int typRowIdx = isMtd ? 4 : 8;
-		int ampRowIdx = isMtd ? 5 : 9;
+//		int ampRowIdx = isMtd ? 5 : 9;
 		
 		for(PlanLvValue planLv : planLvList) {
 			String planType = "";
@@ -82,7 +82,7 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 			
 			sheet.getRow(noOfFileRowIdx).getCell(planIdx).setCellValue(planLv.getNumOfFile());
 			sheet.getRow(typRowIdx).getCell(planIdx).setCellValue(planLv.getTyp());
-			sheet.getRow(ampRowIdx).getCell(planIdx).setCellValue(planLv.getAmp());
+//			sheet.getRow(ampRowIdx).getCell(planIdx).setCellValue(planLv.getAmp());
 		}
 
 		WorkbookUtil.getInstance().refreshAllFormula(sheet.getWorkbook());
@@ -90,21 +90,12 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 
 	private int getPlanColumnIdx(Sheet sheet, String productType, String planType) {
 		int planRowIdx = 2;
-		int beginCol = 99;
-		String section = "";
-		
-		if(productType.toUpperCase().contains("SPOUSE")) {
-			section = "SPOUSE";
-		} else {
-			section = "INDIVIDUAL";
-		}
+		int beginCol = -1;
 		
 		for(int n = 0; n < sheet.getRow(planRowIdx - 1).getLastCellNum(); n++) {
 			Cell cell = sheet.getRow(planRowIdx - 1).getCell(n, Row.CREATE_NULL_AS_BLANK);
-			if(cell.getStringCellValue().toUpperCase().contains(section)) {
-				beginCol = cell.getColumnIndex();
-			}
-			if(beginCol != 99) break;
+			beginCol = retrieveBeginCol(cell, productType);
+			if(beginCol != -1) break;
 		}
 		
 		for(int i = beginCol; i < sheet.getRow(planRowIdx).getLastCellNum(); i++) {
@@ -113,7 +104,14 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 				return i;
 			}
 		}
-		return 999;
+		return beginCol;
+	}
+	
+	private int retrieveBeginCol(Cell cell, String productSection) {
+		if(cell.getStringCellValue().toUpperCase().contains(productSection.toUpperCase())) {
+			return cell.getColumnIndex();
+		}
+		return -1;
 	}
 
 }
