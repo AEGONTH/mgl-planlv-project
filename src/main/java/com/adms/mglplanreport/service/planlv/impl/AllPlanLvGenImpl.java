@@ -22,7 +22,7 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 	public PlanLevelObj getMTDData(String campaignCode, Date processDate) throws Exception {
 		PlanLvValueService service = (PlanLvValueService) ApplicationContextUtil.getApplicationContext().getBean("planLvValueService");
 //		[0] is campaignCode, [1] is approve yearMonth
-		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAllMTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
+		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "MTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
 		PlanLevelObj result = new PlanLevelObj();
 		result.setCampaignCode(campaignCode);
 		result.setMonthYear(DateUtil.convDateToString("MMM-yy", processDate));
@@ -34,7 +34,7 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 	public PlanLevelObj getYTDData(String campaignCode, Date processDate) throws Exception {
 		PlanLvValueService service = (PlanLvValueService) ApplicationContextUtil.getApplicationContext().getBean("planLvValueService");
 //		[0] is campaignCode, [1] is approve yearMonth
-		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAllYTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
+		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "YTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
 		PlanLevelObj result = new PlanLevelObj();
 		result.setCampaignCode(campaignCode);
 		result.setMonthYear(DateUtil.convDateToString("yyyy", processDate));
@@ -51,8 +51,17 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		Cell cell = sheet.getRow(2).getCell(0, Row.CREATE_NULL_AS_BLANK);
 		cell.setCellValue(planLevelMtdObj.getMonthYear());
 
-		setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
-		setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
+		if(planLevelMtdObj.getPlanLvValues() != null && planLevelMtdObj.getPlanLvValues().size() > 0) {
+			setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
+		} else {
+			throw new Exception("MTD Data is null: " + planLevelMtdObj.getCampaignCode());
+		}
+		
+		if(planLevelYTDObj.getPlanLvValues() != null && planLevelYTDObj.getPlanLvValues().size() > 0) {
+			setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
+		} else {
+			throw new Exception("YTD Data is null: " + planLevelYTDObj.getCampaignCode());
+		}
 		sheet.setPrintGridlines(false);
 	}
 	

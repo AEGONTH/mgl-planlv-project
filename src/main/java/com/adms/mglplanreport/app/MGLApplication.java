@@ -16,12 +16,8 @@ public class MGLApplication {
 	public static void main(String[] args) {
 		try {
 			logger.setLogFileName(args[2]);
-//			logger.setLogFileName("d:/temp/log.log");
-			
 			String yyyyMMarg = args[0];
 			Date processDate = DateUtil.toEndOfMonth(DateUtil.convStringToDate("yyyyMMdd", yyyyMMarg+"01"));
-			
-//			String dir = "D:/temp/MGL/out";
 			String dir = args[1];
 			
 			new MGLSummaryReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "summary", processDate);

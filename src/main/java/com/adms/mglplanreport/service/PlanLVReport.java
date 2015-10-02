@@ -44,7 +44,7 @@ public class PlanLVReport {
 		try {
 
 			Workbook wb = null;
-			int sheetIdx = 999;
+			int sheetIdx = -1;
 			
 			List<Campaign> campaigns = getAllCampaignInYear(processDate);
 			
@@ -71,7 +71,7 @@ public class PlanLVReport {
 					
 					sheetIdx = _campaignSheetIdxMap.get(campaign.getCampaignCode());
 					
-					if(sheetIdx == 999) {
+					if(sheetIdx < 0) {
 						throw new Exception("Cannot find template sheet index: " + campaign.getCampaignCode());
 					}
 					
