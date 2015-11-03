@@ -15,8 +15,11 @@ import com.adms.mglplanreport.util.ApplicationContextUtil;
 import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.PlanLevelObj;
 import com.adms.utils.DateUtil;
+import com.adms.utils.Logger;
 
 public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
+
+	private static Logger logger = Logger.getLogger();
 
 	@Override
 	public PlanLevelObj getMTDData(String campaignCode, Date processDate) throws Exception {
@@ -54,13 +57,13 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		if(planLevelMtdObj.getPlanLvValues() != null && planLevelMtdObj.getPlanLvValues().size() > 0) {
 			setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
 		} else {
-			throw new Exception("MTD Data is null: " + planLevelMtdObj.getCampaignCode());
+			logger.warn("MTD Data is null: " + planLevelMtdObj.getCampaignCode());
 		}
 		
 		if(planLevelYTDObj.getPlanLvValues() != null && planLevelYTDObj.getPlanLvValues().size() > 0) {
 			setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
 		} else {
-			throw new Exception("YTD Data is null: " + planLevelYTDObj.getCampaignCode());
+			logger.warn("YTD Data is null: " + planLevelYTDObj.getCampaignCode());
 		}
 		sheet.setPrintGridlines(false);
 	}

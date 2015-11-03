@@ -2,7 +2,7 @@
 <FileFormat fileName="Daily_Performance_Tracking_ByLot.xls" fileType="EXCEL" locale="en-US">
 	<DataSet description="Daily Performance Tracking">
 
-		<DataSheet sheetIndexs="0-20">
+		<DataSheet sheetIndexs="0-20" skipWhenNull="TRUE">
 
 			<DataRecord listSourceName="listLotList" beginRow="1" endRow="9">
 				<BeginRecordCondition column="A" comparator="EQ" checkValue="Solicitation Code  :" firstRowAsData="TRUE" />
