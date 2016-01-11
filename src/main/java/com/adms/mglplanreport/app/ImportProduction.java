@@ -35,6 +35,7 @@ public class ImportProduction {
 
 	public static final String FILE_FORMAT_PRODUCTION_BY_LOT_TELE = "fileformat/FileFormat_SSIS_DailyProductionByLot-input-TELE.xml";
 	public static final String FILE_FORMAT_PRODUCTION_BY_LOT_OTO = "fileformat/FileFormat_SSIS_DailyProductionByLot-input-OTO.xml";
+	public static final String FILE_FORMAT_PRODUCTION_BY_LOT_3RD = "fileformat/FileFormat_SSIS_DailyProductionByLot-input-3RD.xml";
 
 	public static final String PRODUCTION_BY_LOT_SERVICE_BEAN = "productionByLotService";
 	public static final String LIST_LOT_SERVICE_BEAN = "listLotService";
@@ -251,7 +252,12 @@ public class ImportProduction {
 					remainingLead = remainingLeadDataHolder.get("remainingLead").getIntValue();
 				}
 
-				if(dataFileLocation.contains("TELE")) isNewTimeFormat = isNewTimeFormat(dataFileLocation);
+				//TODO Temporary force 3RD using new time format (hh.mm)
+				if(dataFileLocation.contains("3RD")) {
+					isNewTimeFormat = true;
+				} else {
+					isNewTimeFormat = isNewTimeFormat(dataFileLocation);
+				}
 				List<DataHolder> dataHolderList = sheetDataHolder.getDataList("dataRecords");
 				importDataHolderList(listLot, totalLead, remainingLead, dataHolderList, isNewTimeFormat);
 			}
@@ -301,6 +307,7 @@ public class ImportProduction {
 			public boolean accept(File dir, String name)
 			{
 				return !name.contains("~$") 
+						&& !name.contains("archive")
 						&& !name.contains("TSR") 
 						&& !name.contains("SalesReportByRecords") 
 						&& !name.contains("_ALL")
@@ -322,11 +329,17 @@ public class ImportProduction {
 			{
 				fileFormatFileName = FILE_FORMAT_PRODUCTION_BY_LOT_OTO;
 			}
-			else {
+			else if (filename.contains("3RD")) 
+			{
+				fileFormatFileName = FILE_FORMAT_PRODUCTION_BY_LOT_3RD;
+			} 
+			else 
+			{
 				System.err.println("File format not found for: " + filename);
 			}
 
 			batch.importFile(fileFormatFileName, filename);
 		}
+		System.out.println("Finished");
 	}
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +41,8 @@ public class MGLSummaryReport {
 	private final int TEMP_TABLE_TOTAL_ROW = 12;
 	private final String MONTH_PATTERN = DateUtil.getDefaultMonthPattern();
 	
-	private Map<String, Double[]> sumOfMtdMap = new HashMap<>();
-	private Double[] sumAllOfYTD = new Double[]{0D, 0D};
+//	private Map<String, Double[]> sumOfMtdMap = new HashMap<>();
+//	private Double[] sumAllOfYTD = new Double[]{0D, 0D};
 	
 //	private Map<String, Double> sumOfIAP = new HashMap<>();
 	
@@ -280,19 +281,15 @@ public class MGLSummaryReport {
 	
 	private void doTableData(Sheet tempSheet, Sheet toSheet, int maxMonth, List<MGLSummaryObj> mglSumList, Date processDate) throws Exception {
 //		remark*: flow is same as table header
-		
-		
 		int ytdTarpColIdx = 0, issuedRateColIdx = 0, paidRateColIdx = 0;
-		
+		Map<String, Integer[]> colIndexMap = new LinkedHashMap<>();
 		int startRow = new Integer(START_TABLE_DATA_ROW).intValue();
 		int n = 0;
 		int mtdIdx = maxMonth * 2;
-		
 		for(int rn = startRow; rn < startRow + mglSumList.size(); rn++) {
 			MGLSummaryObj mgl = mglSumList.get(n);
 			
-			Double[] sumOfYtd = new Double[]{0D, 0D};
-			
+//			Double[] sumOfYtd = new Double[]{0D, 0D};
 			Row tempRow = tempSheet.getRow(startRow);
 			Row toRow = toSheet.createRow(rn);
 			
@@ -324,21 +321,26 @@ public class MGLSummaryReport {
 					mtdColMonth = monthFromCell.substring(monthFromCell.indexOf("(") + 1, monthFromCell.indexOf(")"));
 					
 					Double[] mtdVal = mgl.getMTD().get(mtdColMonth);
+					int idx = isFirstColOfMTD ? 0 : 1;
 					if(mtdVal != null && mtdVal.length > 0) {
-						int idx = isFirstColOfMTD ? 0 : 1;
 						val = mtdVal[idx].doubleValue();
-						sumOfYtd[idx] += val;
+//						sumOfYtd[idx] += val;
 						
-						Double[] mtdByMMM = sumOfMtdMap.get(mtdColMonth);
-						if(mtdByMMM == null) {
-							mtdByMMM = new Double[]{0D, 0D};
-						}
-						mtdByMMM[idx] += val;
-						sumOfMtdMap.put(mtdColMonth, mtdByMMM);
+//						Double[] mtdByMMM = sumOfMtdMap.get(mtdColMonth);
+//						if(mtdByMMM == null) {
+//							mtdByMMM = new Double[]{0D, 0D};
+//						}
+//						mtdByMMM[idx] += val;
+//						sumOfMtdMap.put(mtdColMonth, mtdByMMM);
 					}
 					
 					toCell.setCellValue(val);
 					
+					if(colIndexMap.get(mtdColMonth) == null) {
+						colIndexMap.put(mtdColMonth, new Integer[2]);
+					}
+					Integer[] dataArray = colIndexMap.get(mtdColMonth);
+					dataArray[idx] = toCell.getColumnIndex();
 //				after MTD
 				} else if(((cn + 2) - mtdIdx) > 3) {
 					int temp = (cn + 2) - mtdIdx;
@@ -349,9 +351,17 @@ public class MGLSummaryReport {
 					
 //					YTD
 					if(temp < 6) {
+						String columnsFormular = "";
+						String sumFormular = "SUM(#COLUMNS)";
 						int idx = cn % 2 == 0 ? 0 : 1;
-						toCell.setCellValue(sumOfYtd[idx]);
-						sumAllOfYTD[idx] += sumOfYtd[idx];
+						
+						for(String key : colIndexMap.keySet()) {
+							Integer colIdex = colIndexMap.get(key)[idx];
+							columnsFormular += CellReference.convertNumToColString(colIdex) + (toRow.getRowNum() + 1) + ",";
+						}
+						toCell.setCellFormula(sumFormular.replace("#COLUMNS", columnsFormular.substring(0, columnsFormular.lastIndexOf(","))));
+//						toCell.setCellValue(sumOfYtd[idx]);
+//						sumAllOfYTD[idx] += sumOfYtd[idx];
 						
 						if(cn % 2 != 0) ytdTarpColIdx = toCell.getColumnIndex();
 						
@@ -429,7 +439,7 @@ public class MGLSummaryReport {
 	private void doTableTotal(Sheet tempSheet, Sheet toSheet, int maxMonth) {
 		int startRow = toSheet.getLastRowNum() + 1;
 		int mtdIdx = maxMonth * 2;
-		
+		String sumFunction = "SUM(#FROM:#TO)";
 		Row tempRow = tempSheet.getRow(TEMP_TABLE_TOTAL_ROW);
 		Row toRow = toSheet.createRow(startRow);
 		
@@ -449,22 +459,25 @@ public class MGLSummaryReport {
 				
 				toCell.setCellStyle(tempCell.getCellStyle());
 				
-				String mtdColMonth = null;
-				String monthFromCell = null;
-				if(isFirstColOfMTD) {
-					monthFromCell = toSheet.getRow(START_TABLE_HEADER_ROW).getCell(cn, Row.CREATE_NULL_AS_BLANK).getStringCellValue();
-				} else {
-					monthFromCell = toSheet.getRow(START_TABLE_HEADER_ROW).getCell(cn - 1, Row.CREATE_NULL_AS_BLANK).getStringCellValue();
-				}
-				mtdColMonth = monthFromCell.substring(monthFromCell.indexOf("(") + 1, monthFromCell.indexOf(")"));
+//				String mtdColMonth = null;
+//				String monthFromCell = null;
+//				if(isFirstColOfMTD) {
+//					monthFromCell = toSheet.getRow(START_TABLE_HEADER_ROW).getCell(cn, Row.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				} else {
+//					monthFromCell = toSheet.getRow(START_TABLE_HEADER_ROW).getCell(cn - 1, Row.CREATE_NULL_AS_BLANK).getStringCellValue();
+//				}
+//				mtdColMonth = monthFromCell.substring(monthFromCell.indexOf("(") + 1, monthFromCell.indexOf(")"));
 				
-				Double[] mtd = sumOfMtdMap.get(mtdColMonth);
-				if(mtd != null) {
-					toCell.setCellValue(sumOfMtdMap.get(mtdColMonth)[isFirstColOfMTD ? 0 : 1]);
-				} else {
-					toCell.setCellValue(0);
-				}
-				
+				toCell.setCellFormula(
+						sumFunction
+							.replace("#FROM", CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1))
+							.replace("#TO", CellReference.convertNumToColString(toCell.getColumnIndex()) + toCell.getRowIndex()));
+//				Double[] mtd = sumOfMtdMap.get(mtdColMonth);
+//				if(mtd != null) {
+//					toCell.setCellValue(sumOfMtdMap.get(mtdColMonth)[isFirstColOfMTD ? 0 : 1]);
+//				} else {
+//					toCell.setCellValue(0);
+//				}
 				
 //			after MTD
 			} else if(((cn + 2) - mtdIdx) > 3) {
@@ -476,13 +489,18 @@ public class MGLSummaryReport {
 				
 //				YTD
 				if(temp < 6) {
-					toCell.setCellValue(sumAllOfYTD[cn % 2 == 0 ? 0 : 1]);
-					
-				} /* target */ else if(temp > 6) {
+//					toCell.setCellValue(sumAllOfYTD[cn % 2 == 0 ? 0 : 1]);
+					toCell.setCellFormula(
+							sumFunction
+								.replace("#FROM", CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1))
+								.replace("#TO", CellReference.convertNumToColString(toCell.getColumnIndex()) + toCell.getRowIndex()));
+				} /* target */ 
+				else if(temp > 6) {
 					if(temp == 9 || temp == 10) {
-						String sumformula = "SUM(" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1) 
-								+ ":" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (toCell.getRowIndex()) + ")";
-							toCell.setCellFormula(sumformula);
+						toCell.setCellFormula(
+								sumFunction
+									.replace("#FROM", CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1))
+									.replace("#TO", CellReference.convertNumToColString(toCell.getColumnIndex()) + toCell.getRowIndex()));
 					}
 				}
 				
