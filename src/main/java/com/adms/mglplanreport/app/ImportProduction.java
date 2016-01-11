@@ -300,19 +300,21 @@ public class ImportProduction {
 		batch.setLogLevel(Logger.DEBUG);
 		
 		batch.setLogFileName(logPath);
-
+		System.out.println("ROOT: " + rootPath);
 		FileWalker fw = new FileWalker();
 		fw.walk(rootPath, new FilenameFilter()
 		{
 			public boolean accept(File dir, String name)
 			{
+				
 				return !name.contains("~$") 
-						&& !name.contains("archive")
+						&& !dir.getAbsolutePath().contains("archive")
 						&& !name.contains("TSR") 
 						&& !name.contains("SalesReportByRecords") 
 						&& !name.contains("_ALL")
 						&& (name.contains("Production.xls") 
 								|| name.contains("Production Report.xlsx") 
+								|| name.contains("Production_Report")
 								|| (name.contains("Production Report")
 										&& name.contains(".xls"))
 								|| name.contains("PRODUC"));
