@@ -19,12 +19,17 @@ public class MGLApplication {
 			String yyyyMMarg = args[0];
 			Date processDate = DateUtil.toEndOfMonth(DateUtil.convStringToDate("yyyyMMdd", yyyyMMarg+"01"));
 			String dir = args[1];
+			String method = args[3];
 			
-			new MGLSummaryReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "summary", processDate);
-			
-			new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "production", processDate);
-			
-			new PlanLVReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "planlv", processDate);
+			if(method.equals("SUMMARY_REPORT")) {
+				new MGLSummaryReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "summary", processDate);
+			} else if(method.equals("PRODUCTION_REPORT")) {
+				new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "production", processDate);
+			} else if(method.equals("PLAN_LV_REPORT")) {
+				new PlanLVReport().generateReport(dir + File.separatorChar + yyyyMMarg + File.separatorChar + "planlv", processDate);
+			} else {
+				logger.error("Method Not Found...");
+			}
 			
 			logger.info("### Finish ###");
 		} catch(Exception e) {

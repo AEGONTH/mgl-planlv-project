@@ -40,6 +40,8 @@ public class ImportProduction {
 	public static final String PRODUCTION_BY_LOT_SERVICE_BEAN = "productionByLotService";
 	public static final String LIST_LOT_SERVICE_BEAN = "listLotService";
 	
+	private static boolean uobTimeFormat;
+	
 //	public static String NEW_HH_MM_CAMPAIGN = "";
 
 //	private ApplicationContext applicationContext;
@@ -93,20 +95,26 @@ public class ImportProduction {
 //		log.debug("extractRecord " + dataHolder.printValues());
 
 //		<!-- New HH.MM -->
-//		BigDecimal minutes = dataHolder.get("minutes").getDecimalValue();
 		BigDecimal minutes = dataHolder.get("minutes").getDecimalValue().setScale(2, BigDecimal.ROUND_HALF_UP);
-
-//		String minutesTxt = new DecimalFormat("0.000000000000000").format(minutes);
 		String minutesTxt = minutes.toString();
 		
-		productionByLot.setHour(Long.valueOf(minutesTxt.split("\\.")[0]) / 60);
-		productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]) % 60);
-		
-//		<!-- New HH.MM -->
-		if(isNewHHmm) {
+		String hoursTxt = null;
+		if(uobTimeFormat) {
+			BigDecimal hours = dataHolder.get("hours").getDecimalValue().setScale(2, BigDecimal.ROUND_HALF_UP);
+			hoursTxt = hours.toString();
+			
+			productionByLot.setHour(Long.valueOf(hoursTxt.split("\\.")[0]));
+			productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]));
 			productionByLot.setSecond(Long.valueOf(minutesTxt.split("\\.")[1]));
 		} else {
-			productionByLot.setSecond(Long.valueOf(Math.round(Float.valueOf("0." + minutesTxt.split("\\.")[1]) * 60)));
+			productionByLot.setHour(Long.valueOf(minutesTxt.split("\\.")[0]) / 60);
+			productionByLot.setMinute(Long.valueOf(minutesTxt.split("\\.")[0]) % 60);
+			
+			if(isNewHHmm) {
+				productionByLot.setSecond(Long.valueOf(minutesTxt.split("\\.")[1]));
+			} else {
+				productionByLot.setSecond(Long.valueOf(Math.round(Float.valueOf("0." + minutesTxt.split("\\.")[1]) * 60)));
+			}
 		}
 		
 		productionByLot.setDialing(Long.valueOf(dataHolder.get("dialing").getIntValue()));
@@ -252,9 +260,15 @@ public class ImportProduction {
 					remainingLead = remainingLeadDataHolder.get("remainingLead").getIntValue();
 				}
 
+				//TODO Temporary for revise TELE UOB Data
+				uobTimeFormat = false;
+				
 				//TODO Temporary force 3RD using new time format (hh.mm)
 				if(dataFileLocation.contains("3RD")) {
 					isNewTimeFormat = true;
+				} else if(dataFileLocation.contains("TELE") && dataFileLocation.contains("revise")) {
+					uobTimeFormat = true;
+					isNewTimeFormat = isNewTimeFormat(dataFileLocation);
 				} else {
 					isNewTimeFormat = isNewTimeFormat(dataFileLocation);
 				}
@@ -300,13 +314,11 @@ public class ImportProduction {
 		batch.setLogLevel(Logger.DEBUG);
 		
 		batch.setLogFileName(logPath);
-		System.out.println("ROOT: " + rootPath);
 		FileWalker fw = new FileWalker();
 		fw.walk(rootPath, new FilenameFilter()
 		{
 			public boolean accept(File dir, String name)
 			{
-				
 				return !name.contains("~$") 
 						&& !dir.getAbsolutePath().contains("archive")
 						&& !name.contains("TSR") 
@@ -316,7 +328,7 @@ public class ImportProduction {
 								|| name.contains("Production Report.xlsx") 
 								|| name.contains("Production_Report")
 								|| (name.contains("Production Report")
-										&& name.contains(".xls"))
+										&& name.toLowerCase().contains(".xls"))
 								|| name.contains("PRODUC"));
 			}
 		});

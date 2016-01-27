@@ -44,12 +44,12 @@ public class PlanLVReport {
 		try {
 
 			Workbook wb = null;
-			int sheetIdx = -1;
+			int sheetIdx;
 			
 			List<Campaign> campaigns = getAllCampaignInYear(processDate);
 			
 			for(Campaign campaign : campaigns) {
-				
+				sheetIdx = -1;
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
 					_all_template_num = wb.getNumberOfSheets();
@@ -71,13 +71,9 @@ public class PlanLVReport {
 					
 					sheetIdx = _campaignSheetIdxMap.get(campaign.getCampaignCode());
 					
-					if(sheetIdx < 0) {
-						throw new Exception("Cannot find template sheet index: " + campaign.getCampaignCode());
-					}
-					
 					if(wb.getSheetAt(sheetIdx) == null) {
-						logger.warn("Template for '" + campaign.getCampaignNameMgl() + "' not found.");
-						continue;
+						logger.error("Template for '" + campaign.getCampaignNameMgl() + "' not found.");
+						System.exit(1);
 					}
 					
 					planLv.generateDataSheet(wb.getSheetAt(sheetIdx), mtdData, ytdData);

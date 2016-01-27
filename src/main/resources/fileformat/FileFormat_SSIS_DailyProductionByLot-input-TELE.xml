@@ -25,6 +25,7 @@
 			<DataRecord listSourceName="dataRecords" beginRow="1" endRow="99999">
 				<BeginRecordCondition column="B" comparator="EQ" checkValue="Date" />
 				<DataCell row="1" column="B" dataType="DATE"   fieldName="productionDate" dataFormat="yyyy-MM-dd" />
+				<DataCell row="1" column="C" dataType="NUMBER" fieldName="hours"		  dataFormat="0.000000000000000"/>
 				<DataCell row="1" column="D" dataType="NUMBER" fieldName="minutes"        dataFormat="0.000000000000000" />
 				<DataCell row="1" column="G" dataType="NUMBER" fieldName="dialing"        dataFormat="0" />
 				<DataCell row="1" column="H" dataType="NUMBER" fieldName="completed"      dataFormat="0" />
