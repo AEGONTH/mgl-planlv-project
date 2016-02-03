@@ -5,16 +5,23 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.StringType;
 
 import com.adms.mglplanlv.entity.Campaign;
+import com.adms.mglplanlv.entity.Sales;
 import com.adms.mglplanlv.service.campaign.CampaignService;
+import com.adms.mglplanlv.service.sales.SalesService;
 import com.adms.mglplanreport.enums.ETemplateWB;
 import com.adms.mglplanreport.service.planlv.PlanLevelGenerator;
-import com.adms.mglplanreport.service.planlv.factory.PlanLevelGeneratorFactory;
+import com.adms.mglplanreport.service.planlv.impl.AllPlanLvGenImpl;
 import com.adms.mglplanreport.util.ApplicationContextUtil;
 import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.PlanLevelObj;
@@ -26,17 +33,31 @@ public class PlanLVReport {
 	
 	private final String EXPORT_FILE_NAME = "Production-PlanLV-YTD-#MMM_yyyyMM.xlsx";
 	private int _all_template_num = 0;
-	
+
+	private Map<String, String> campaignCodeByName;
 	private Map<String, Integer> _campaignSheetIdxMap;
 	
 	private static Logger logger = Logger.getLogger();
 	
 	public PlanLVReport() {
 		try {
+			ApplicationContextUtil.getApplicationContext();
 			logger.info("## Plan Level Report ##");
 			initCampaignSheet(WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath())));
 		} catch(Exception e) {
 			logger.error(e.getMessage(), e);
+		}
+	}
+	
+	private void initCampaignCode(String campaignYear) throws Exception {
+		if(campaignCodeByName == null) {
+			campaignCodeByName = new HashMap<>();
+			CampaignService campaignService = (CampaignService) ApplicationContextUtil.getApplicationContext().getBean("campaignService");
+			DetachedCriteria criteria = DetachedCriteria.forClass(Campaign.class);
+			criteria.add(Restrictions.eq("campaignYear", campaignYear));
+			List<Campaign> campaigns = campaignService.findByCriteria(criteria);
+			campaignCodeByName = campaigns.stream()
+					.collect(Collectors.toMap(Campaign::getCampaignNameMgl, Campaign::getCampaignCode));
 		}
 	}
 	
@@ -46,9 +67,9 @@ public class PlanLVReport {
 			Workbook wb = null;
 			int sheetIdx;
 			
-			List<Campaign> campaigns = getAllCampaignInYear(processDate);
+			List<String> campaignNameList = getAllCampaignInYear(processDate);
 			
-			for(Campaign campaign : campaigns) {
+			for(String campaignName : campaignNameList) {
 				sheetIdx = -1;
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
@@ -56,24 +77,42 @@ public class PlanLVReport {
 				}
 				
 				try {
-					PlanLevelGenerator planLv = PlanLevelGeneratorFactory.getGenerator(campaign.getCampaignNameMgl());
+					PlanLevelGenerator planLv = new AllPlanLvGenImpl();
 					
-					if(planLv == null) {
-						logger.warn("Plan Level Generator for '" + campaign.getCampaignNameMgl() + "' not found.");
-						continue;
+//					if(planLv == null) {
+//						logger.warn("Plan Level Generator for '" + campaign.getCampaignNameMgl() + "' not found.");
+//						continue;
+//					}
+					
+					logger.info("Getting MTD Data: " + campaignName + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
+					PlanLevelObj mtdData = null;
+					
+					try {
+						mtdData = planLv.getMTDData(this.campaignCodeByName.get(campaignName), campaignName, processDate);
+					} catch(Exception e) {
+						logger.error("Cannot get MTD data for: " + campaignName + " | processDate: " + processDate);
+						throw e;
 					}
 					
-					logger.info("Getting MTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
-					PlanLevelObj mtdData = planLv.getMTDData(campaign.getCampaignCode(), processDate);
+					logger.info("Getting YTD Data: " + campaignName + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
+					PlanLevelObj ytdData = null;
+
+					try {
+						ytdData = planLv.getYTDData(this.campaignCodeByName.get(campaignName), campaignName, processDate);
+					} catch(Exception e) {
+						logger.error("Cannot get YTD data for: " + campaignName + " | processDate: " + processDate);
+						throw e;
+					}
 					
-					logger.info("Getting YTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
-					PlanLevelObj ytdData = planLv.getYTDData(campaign.getCampaignCode(), processDate);
+					sheetIdx = -1;
 					
-					sheetIdx = _campaignSheetIdxMap.get(campaign.getCampaignCode());
-					
-					if(wb.getSheetAt(sheetIdx) == null) {
-						logger.error("Template for '" + campaign.getCampaignNameMgl() + "' not found.");
+					try {
+						sheetIdx = _campaignSheetIdxMap.get(this.campaignCodeByName.get(campaignName));
+					} catch(Exception e) {
+						logger.error("Cannot find sheet template index for: '" + campaignName + "', campaignCode: " + this.campaignCodeByName.get(campaignName));
+						logger.error("Exit...");
 						System.exit(1);
+						throw e;
 					}
 					
 					planLv.generateDataSheet(wb.getSheetAt(sheetIdx), mtdData, ytdData);
@@ -98,9 +137,21 @@ public class PlanLVReport {
 		wb.close();
 	}
 
-	private List<Campaign> getAllCampaignInYear(Date processDate) throws Exception {
-		CampaignService service = (CampaignService) ApplicationContextUtil.getApplicationContext().getBean("campaignService");
-		return service.findCampaignByLikeListLot("%"  + DateUtil.convDateToString("yy", processDate));
+	@SuppressWarnings("unchecked")
+	private List<String> getAllCampaignInYear(Date processDate) throws Exception {
+		SalesService salesService = (SalesService) ApplicationContextUtil.getApplicationContext().getBean("salesService");
+		
+		String processYear = DateUtil.convDateToString("yyyy", processDate);
+		initCampaignCode(processYear);
+		
+		DetachedCriteria sales = DetachedCriteria.forClass(Sales.class);
+		sales.add(Restrictions.sqlRestriction("CONVERT(nvarchar(4), {alias}.SALE_DATE, 112) = ?", processYear, StringType.INSTANCE));
+		
+		DetachedCriteria campaign = sales.createCriteria("listLot", "l").createCriteria("campaign", "c");
+		campaign.setProjection(Projections.distinct(Projections.property("c.campaignNameMgl")));
+		
+		List<?> list = salesService.findByCriteria(sales);
+		return (List<String>) list.stream().collect(Collectors.toList());
 	}
 	
 	private void writeOut(Workbook wb, Date processDate, String outPath) throws IOException {
@@ -129,7 +180,7 @@ public class PlanLVReport {
 	private void sortingSheets(Workbook wb) {
 		int len = wb.getNumberOfSheets();
 		int k;
-		
+
 		for(int n = len; n >= 0; n--) {
 			for(int i = 0; i < len - 1; i++) {
 				k = i + 1;
@@ -138,15 +189,13 @@ public class PlanLVReport {
 				
 				if(_campaignSheetIdxMap.get(a) > _campaignSheetIdxMap.get(b)) {
 					try {
-						swap(wb, _campaignSheetIdxMap.get(a), _campaignSheetIdxMap.get(b));
+						swap(wb, i, i+1);
 					} catch(Exception e) {
-						System.err.println("err: " + a + " cannot swap with " + b);
 						logger.error(e.getMessage(), e);
 					}
 				}
 			}
 		}
-		
 	}
 	
 	private void swap(Workbook wb, int idxA, int idxB) throws Exception {

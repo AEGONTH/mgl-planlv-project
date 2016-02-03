@@ -3,7 +3,10 @@ package com.adms.mglplanreport.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -13,8 +16,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
 
+import com.adms.mglplanlv.entity.Campaign;
 import com.adms.mglplanlv.entity.ProductionByLot;
+import com.adms.mglplanlv.service.campaign.CampaignService;
 import com.adms.mglplanlv.service.productionbylot.ProductionByLotService;
 import com.adms.mglplanreport.enums.ETemplateWB;
 import com.adms.mglplanreport.util.ApplicationContextUtil;
@@ -41,29 +48,36 @@ public class MGLByCampaignMonthlyReport {
 	private final String SHEET_NAME_PATTERN = "MMM-yy";
 	private String EXPORT_FILE_NAME = "Production_Report-#campaignName_(forMGL)-#yyyyMMdd.xlsx";
 	
+	private Map<String, String> campaignCodeByName;
+	
 	private MGLMonthlyObj sumProductionByMonth;
+	
+	private Date processDate;
 	
 	private static Logger logger = Logger.getLogger();
 
 	public void generateReport(String outPath, Date processDate) {
+		ApplicationContextUtil.getApplicationContext();
 		logger.info("## MGL Production Report by Campaign ##");
 		try {
 //			Template
 			Workbook wb = null;
 			Sheet tempSheet = null;
+			this.processDate = processDate;
+			initCampaignCode(DateUtil.convDateToString("yyyy", processDate));
 			
 //			receive All data
-			List<MGLMonthlyObj> MGLObjs = getMGLDatas(DateUtil.convDateToString("yyyyMM", processDate));
+			List<MGLMonthlyObj> mglObjs = getMGLDatas(DateUtil.convDateToString("yyyyMM", processDate));
 			
-			String campaignCode = "";
+			String campaignGroup = "";
 			String campaignName = "";
 			String monthStr = "";
-			logger.info("MGLObjs size: " + MGLObjs.size());
-			for(MGLMonthlyObj mglMonthlyObj : MGLObjs) {
+			logger.info("Total Campaign: " + mglObjs.size());
+			for(MGLMonthlyObj mglMonthlyObj : mglObjs) {
 				
-				if(!campaignCode.equals(mglMonthlyObj.getCampaignCode())) {
+				if(!campaignGroup.equals(mglMonthlyObj.getCampaignName())) {
 					
-					if(StringUtils.isNotBlank(campaignCode)) {
+					if(StringUtils.isNotBlank(campaignGroup)) {
 //						sum all month
 						tempSheet = wb.getSheetAt(ETemplateWB.MGL_BY_CAMPAIGN_TOTAL_TEMPLATE.getSheetIndex());
 						doNewSheet(tempSheet, sumProductionByMonth, true);
@@ -73,11 +87,12 @@ public class MGLByCampaignMonthlyReport {
 						monthStr = "";
 					}
 					
-					campaignCode = mglMonthlyObj.getCampaignCode();
+					campaignGroup = mglMonthlyObj.getCampaignName();
 					campaignName = mglMonthlyObj.getCampaignName();
 
 					sumProductionByMonth = new MGLMonthlyObj();
-					sumProductionByMonth.setCampaignCode(campaignCode);
+					sumProductionByMonth.setCampaignCode(getCampaignCode(mglMonthlyObj.getCampaignName()));
+					sumProductionByMonth.setCampaignName(mglMonthlyObj.getCampaignName());
 					sumProductionByMonth.setMonth("Total");
 					
 //					get template
@@ -94,13 +109,11 @@ public class MGLByCampaignMonthlyReport {
 						System.err.println("ERROR: " + mglMonthlyObj.toString());
 						throw e;
 					}
-					
 				}
-				
 			}
 			
 //			for last one
-			if(StringUtils.isNotBlank(campaignCode)) {
+			if(StringUtils.isNotBlank(campaignGroup)) {
 //				sum all month
 				doNewSheet(tempSheet, sumProductionByMonth, true);
 				
@@ -140,14 +153,29 @@ public class MGLByCampaignMonthlyReport {
 		}
 	}
 	
+	private void initCampaignCode(String campaignYear) throws Exception {
+		if(campaignCodeByName == null) {
+			campaignCodeByName = new HashMap<>();
+			CampaignService campaignService = (CampaignService) ApplicationContextUtil.getApplicationContext().getBean("campaignService");
+			DetachedCriteria criteria = DetachedCriteria.forClass(Campaign.class);
+			criteria.add(Restrictions.eq("campaignYear", campaignYear));
+			List<Campaign> campaigns = campaignService.findByCriteria(criteria);
+			campaignCodeByName = campaigns.stream()
+					.collect(Collectors.toMap(Campaign::getCampaignNameMgl, Campaign::getCampaignCode));
+		}
+	}
+	
+	private String getCampaignCode(String campaignNameMgl) throws Exception {
+		return campaignCodeByName.get(campaignNameMgl);
+	}
+	
 	private List<MGLMonthlyObj> getMGLDatas(String yearMonth) throws Exception {
 		ProductionByLotService service = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
 		String hql = " from ProductionByLot d "
 				+ " where 1 = 1"
 				+ " and CONVERT(nvarchar(6), d.productionDate, 112) <= ? "
 				+ " and CONVERT(nvarchar(4), d.productionDate, 112) = ? "
-//				+ " and d.listLot.listLotCode in ('AAM15', 'AAN15') "
-				+ " order by d.listLot.campaign.campaignCode, CONVERT(nvarchar(6), d.productionDate, 112), d.listLot.listLotCode ";
+				+ " order by d.listLot.campaign.campaignNameMgl, CONVERT(nvarchar(6), d.productionDate, 112), d.listLot.listLotCode ";
 		List<ProductionByLot> prodList = service.findByHql(hql, yearMonth, yearMonth.substring(0, 4));
 		
 		if(prodList == null || prodList != null && prodList.size() == 0) {
@@ -158,25 +186,25 @@ public class MGLByCampaignMonthlyReport {
 		MGLMonthlyObj mgl = null;
 		
 		String month = "";
-		String campaignCode = "";
+		String campaignGroup = "";
 		
 		for(ProductionByLot prod : prodList) {
 			String currMonth = DateUtil.convDateToString(SHEET_NAME_PATTERN, prod.getProductionDate());
-			String currCampaign = prod.getListLot().getCampaign().getCampaignCode();
+			String currCampaign = prod.getListLot().getCampaign().getCampaignNameMgl();
 			
-			if(!campaignCode.equals(currCampaign) || !month.equals(currMonth)) {
+			if(!campaignGroup.equals(currCampaign) || !month.equals(currMonth)) {
 				
 				if(mgl != null) {
 					mglList.add(mgl);
 				}
 				
 				month = new String(currMonth);
-				campaignCode = new String(currCampaign);
+				campaignGroup = new String(currCampaign);
 				
 				mgl = new MGLMonthlyObj();
 				mgl.setMonth(month);
 				mgl.setCallingSite(prod.getListLot().getCampaign().getCallCenter().getCallCenterName());
-				mgl.setCampaignCode(prod.getListLot().getCampaign().getCampaignCode());
+				mgl.setCampaignCode(getCampaignCode(prod.getListLot().getCampaign().getCampaignNameMgl()));
 				mgl.setCampaignName(prod.getListLot().getCampaign().getCampaignNameMgl());
 				mgl.setRercordsReceived(prod.getTotalLead().doubleValue());
 				
@@ -205,24 +233,24 @@ public class MGLByCampaignMonthlyReport {
 	private ProductionByLot getSumByListlotProduction(String listLot, String yearMonth) throws Exception {
 		ProductionByLotService service = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
 		
-		List<ProductionByLot> list = service.findByNamedQuery("findSumByListLotAndMonthProductionByLot", listLot, yearMonth);
+		List<ProductionByLot> list = service.findByNamedQuery("sumByLotPerMonth", listLot, yearMonth, "");
 		if(list == null || list != null && list.size() == 0) throw new Exception("Data not found: listLot: " + listLot + ", yearMonth: " + yearMonth);
 		
 		return list.get(0);
 	}
 	
-	private ProductionByLot getSumByMonthProduction(String yearMonth, String campaignCode) throws Exception {
+	private ProductionByLot getSumByMonthProduction(String yearMonth, String campaignNameMgl) throws Exception {
 		ProductionByLotService service = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
-		List<ProductionByLot> list = service.findByNamedQuery("findSumByMonthProductionByLot", yearMonth, campaignCode);
-		if(list == null || list != null && list.size() == 0) throw new Exception("Data not found: yearMonth: " + yearMonth + " | campaignCode: " + campaignCode);
+		List<ProductionByLot> list = service.findByNamedQuery("sumByCampaignPerMonth", "", yearMonth, campaignNameMgl);
+		if(list == null || list != null && list.size() == 0) throw new Exception("Data not found: yearMonth: " + yearMonth + " | campaignNameMgl: " + campaignNameMgl);
 		
 		return list.get(0);
 	}
 	
-	private ProductionByLot getSumByCampaignProductionByLot(String yearMonth, String campaignCode) throws Exception {
+	private ProductionByLot getSumByCampaignProductionByLot(String yearMonth, String campaignNameMgl) throws Exception {
 		ProductionByLotService service = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
-		List<ProductionByLot> list = service.findByNamedQuery("findSumMonthOfCampaignProductionByLot", campaignCode);
-		if(list == null || list != null && list.size() == 0) throw new Exception("Data not found: campaignCode: " + campaignCode);
+		List<ProductionByLot> list = service.findByNamedQuery("sumByCampaignYearToDate", "", yearMonth, campaignNameMgl);
+		if(list == null || list != null && list.size() == 0) throw new Exception("Data not found: campaignNameMgl: " + campaignNameMgl);
 		
 		return list.get(0);
 	}
@@ -251,7 +279,7 @@ public class MGLByCampaignMonthlyReport {
 					if(c == 0) {
 						String title = "";
 						if(isSumSheet) {
-							title = tempCell.getStringCellValue().replace("#yyyy", DateUtil.convDateToString("yyyy", mglByMonth.getProductionByLots().get(0).getProductionDate()));
+							title = tempCell.getStringCellValue().replace("#yyyy", DateUtil.convDateToString("yyyy", this.processDate));
 						} else {
 							title = tempCell.getStringCellValue()
 									.replace("MMMM, yyyy", DateUtil.convDateToString("MMMM, yyyy", DateUtil.convStringToDate("yyyy-MM-dd", mglByMonth.getCallingDate())));
@@ -415,7 +443,7 @@ public class MGLByCampaignMonthlyReport {
 		Row toRow = toSheet.createRow(toSheet.getLastRowNum() + 1);
 		toRow.setHeightInPoints(tempRow.getHeightInPoints());
 		
-		ProductionByLot product = getSumByCampaignProductionByLot("", mglMonthlyObj.getCampaignCode() );
+		ProductionByLot product = getSumByCampaignProductionByLot(DateUtil.convDateToString("yyyyMM", this.processDate), mglMonthlyObj.getCampaignName());
 		setDataValue(tempRow, toRow, product, false, true, true);
 	}
 	
@@ -424,10 +452,10 @@ public class MGLByCampaignMonthlyReport {
 		Row toRow = toSheet.createRow(toSheet.getLastRowNum() + 1);
 		toRow.setHeightInPoints(tempRow.getHeightInPoints());
 		
-		ProductionByLot product = getSumByMonthProduction(DateUtil.convDateToString("yyyyMM", DateUtil.convStringToDate(SHEET_NAME_PATTERN, mglMonthlyObj.getMonth())), mglMonthlyObj.getCampaignCode() );
+		ProductionByLot product = getSumByMonthProduction(DateUtil.convDateToString("yyyyMM", DateUtil.convStringToDate(SHEET_NAME_PATTERN, mglMonthlyObj.getMonth())), mglMonthlyObj.getCampaignName() );
 		setDataValue(tempRow, toRow, product, false, true, false);
 		
-		sumProductionByMonth.setCampaignCode(mglMonthlyObj.getCampaignCode());
+		sumProductionByMonth.setCampaignCode(getCampaignCode(mglMonthlyObj.getCampaignName()));
 		if(sumProductionByMonth.getProductionByLots() == null) {
 			sumProductionByMonth.setProductionByLots(new ArrayList<ProductionByLot>());
 		}

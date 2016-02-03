@@ -8,7 +8,7 @@ import com.adms.mglpplanreport.obj.PlanLevelObj;
 
 public interface PlanLevelGenerator {
 
-	public PlanLevelObj getMTDData(String campaignCode, Date processDate) throws Exception;
-	public PlanLevelObj getYTDData(String campaignCode, Date processDate) throws Exception;
+	public PlanLevelObj getMTDData(String campaignCode, String campaignName, Date processDate) throws Exception;
+	public PlanLevelObj getYTDData(String campaignCode, String campaignName,Date processDate) throws Exception;
 	public void generateDataSheet(Sheet tempSheet, PlanLevelObj planLevelMtdObj, PlanLevelObj planLevelYTDObj) throws Exception;
 }

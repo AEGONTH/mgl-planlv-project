@@ -22,10 +22,10 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 	private static Logger logger = Logger.getLogger();
 
 	@Override
-	public PlanLevelObj getMTDData(String campaignCode, Date processDate) throws Exception {
+	public PlanLevelObj getMTDData(String campaignCode, String campaignName, Date processDate) throws Exception {
 		PlanLvValueService service = (PlanLvValueService) ApplicationContextUtil.getApplicationContext().getBean("planLvValueService");
 //		[0] is campaignCode, [1] is approve yearMonth
-		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "MTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
+		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "MTD", campaignName, DateUtil.convDateToString("yyyyMM", processDate));
 		PlanLevelObj result = new PlanLevelObj();
 		result.setCampaignCode(campaignCode);
 		result.setMonthYear(DateUtil.convDateToString("MMM-yy", processDate));
@@ -34,10 +34,10 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 	}
 
 	@Override
-	public PlanLevelObj getYTDData(String campaignCode, Date processDate) throws Exception {
+	public PlanLevelObj getYTDData(String campaignCode, String campaignName, Date processDate) throws Exception {
 		PlanLvValueService service = (PlanLvValueService) ApplicationContextUtil.getApplicationContext().getBean("planLvValueService");
 //		[0] is campaignCode, [1] is approve yearMonth
-		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "YTD", campaignCode, DateUtil.convDateToString("yyyyMM", processDate));
+		List<PlanLvValue> planLvList = service.findByNamedQuery("execPlanLvAll", "YTD", campaignName, DateUtil.convDateToString("yyyyMM", processDate));
 		PlanLevelObj result = new PlanLevelObj();
 		result.setCampaignCode(campaignCode);
 		result.setMonthYear(DateUtil.convDateToString("yyyy", processDate));
@@ -83,13 +83,25 @@ public class AllPlanLvGenImpl extends AbstractPlanLevelGenerator {
 			try {
 				planType = planLv.getPlanType().toUpperCase();
 			} catch(Exception e) {
-				System.err.println("Error Plan Type: " + planLv.toString());
+				logger.error("Error Plan Type: " + planLv.toString());
 				throw e;
 			}
-			planIdx = getPlanColumnIdx(sheet, planLv.getProduct().toUpperCase(), planType);
 			
-			if(planIdx == 999) {
-				throw new Exception("Column Index not found for \"" + planLv.getProduct() + " | " + planType + "\"");
+			try {
+				planIdx = getPlanColumnIdx(sheet, planLv.getProduct().toUpperCase(), planType);
+			} catch(Exception e) {
+				logger.error("Error while get Plan Column Index..: " 
+						+ sheet.getSheetName() 
+						+ " | product: " + planLv.getProduct()
+						+ " | planType: " + planType);
+				throw e;
+			}
+			
+			if(planIdx == -1) {
+				logger.error("Not found Plan Column Index..: " 
+						+ sheet.getSheetName() 
+						+ " | product: " + planLv.getProduct()
+						+ " | planType: " + planType);
 			}
 			
 			sheet.getRow(noOfFileRowIdx).getCell(planIdx).setCellValue(planLv.getNumOfFile());
